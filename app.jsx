@@ -486,6 +486,7 @@ function App() {
   const animationFrameRef = useRef(null);
   const nippleManagerRef = useRef(null);
   const isMobileRef = useRef(/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  const playerPositionRef = useRef({ x: 0, y: 1.8, z: 0 });
   useEffect(() => {
     const initialize = async () => {
       await room.initialize();
@@ -755,12 +756,12 @@ function App() {
     }
     return objects;
   };
-  const updateNearbyNPCs = () => {
+  const updateNearbyNPCs = (currentPosition) => {
     const npcs = [];
     loadedChunks.forEach((chunk) => {
       chunk.npcs.forEach((npc) => {
         const distance = Math.sqrt(
-          Math.pow(npc.position.x - playerPosition.x, 2) + Math.pow(npc.position.z - playerPosition.z, 2)
+          Math.pow(npc.position.x - currentPosition.x, 2) + Math.pow(npc.position.z - currentPosition.z, 2)
         );
         if (distance < 20) {
           npcs.push({ ...npc, distance });
@@ -774,15 +775,17 @@ function App() {
   };
   const startGameLoop = () => {
     const gameLoop = () => {
-      updatePlayer();
-      updateNearbyNPCs();
+      const newPos = updatePlayer();
+      if (newPos) {
+        updateNearbyNPCs(newPos);
+      }
       render();
       animationFrameRef.current = requestAnimationFrame(gameLoop);
     };
     gameLoop();
   };
   const updatePlayer = () => {
-    if (!cameraRef.current) return;
+    if (!cameraRef.current) return null;
     const moveSpeed = 0.2;
     const controls = playerControlsRef.current;
     const camera = cameraRef.current;
@@ -796,12 +799,15 @@ function App() {
     if (moveDirection.length() > 0) {
       moveDirection.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation.yaw);
     }
-    const newX = playerPosition.x + moveDirection.x * moveSpeed;
-    const newZ = playerPosition.z + moveDirection.z * moveSpeed;
+    const currentPos = playerPositionRef.current;
+    const newX = currentPos.x + moveDirection.x * moveSpeed;
+    const newZ = currentPos.z + moveDirection.z * moveSpeed;
     const newY = generateTerrainHeight(newX, newZ) + 1.8;
-    setPlayerPosition({ x: newX, y: newY, z: newZ });
+    const newPosition = { x: newX, y: newY, z: newZ };
+    playerPositionRef.current = newPosition;
     camera.position.set(newX, newY, newZ);
     camera.rotation.set(rotation.pitch, rotation.yaw, 0, "YXZ");
+    return newPosition;
   };
   const render = () => {
     if (rendererRef.current && sceneRef.current && cameraRef.current) {
@@ -811,7 +817,7 @@ function App() {
   return /* @__PURE__ */ jsxDEV(Fragment, { children: [
     /* @__PURE__ */ jsxDEV("canvas", { ref: canvasRef, className: "w-full h-full block" }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 832,
+      lineNumber: 839,
       columnNumber: 13
     }, this),
     interactionTarget && !chatNPC && /* @__PURE__ */ jsxDEV("div", { className: "fixed bottom-10 left-1/2 -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg text-center", children: [
@@ -819,7 +825,7 @@ function App() {
       interactionTarget.name
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 835,
+      lineNumber: 842,
       columnNumber: 17
     }, this),
     chatNPC && currentUser && /* @__PURE__ */ jsxDEV(
@@ -833,20 +839,20 @@ function App() {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 841,
+        lineNumber: 848,
         columnNumber: 17
       },
       this
     )
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 831,
+    lineNumber: 838,
     columnNumber: 9
   }, this);
 }
 const root = createRoot(document.getElementById("root"));
 root.render(/* @__PURE__ */ jsxDEV(App, {}, void 0, false, {
   fileName: "<stdin>",
-  lineNumber: 852,
+  lineNumber: 859,
   columnNumber: 13
 }));
