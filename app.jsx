@@ -4,7 +4,6 @@ import { createRoot } from "react-dom/client";
 import { WebsimSocket, useQuery } from "@websim/use-query";
 import * as THREE from "three";
 import nipplejs from "nipplejs";
-import seedrandom from "seedrandom";
 const room = new WebsimSocket();
 const VOICES = [
   { id: "en-male", name: "English (Male)", flag: "\u{1F1EC}\u{1F1E7}" },
@@ -33,6 +32,12 @@ const BIOME_COLORS = {
   rainforest: new THREE.Color(2263842),
   steppe: new THREE.Color(9127187)
 };
+function generateUUID() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == "x" ? r : r & 3 | 8;
+    return v.toString(16);
+  });
+}
 function simpleNoise(x, z, scale = 0.02, octaves = 2, persistence = 0.5, lacunarity = 2) {
   let total = 0;
   let frequency = scale;
@@ -68,9 +73,8 @@ function generateChunkHash(x, z) {
 function generateTerrainHeight(x, z) {
   return 0;
 }
-function generateNPCsForChunk(chunkX, chunkZ, discoveredBy) {
+function generateNPCsForChunk(chunkX, chunkZ, random) {
   const npcs = [];
-  const random = seedrandom(`${chunkX}_${chunkZ}`);
   if (chunkX === 0 && chunkZ === 0) {
     const worldY = generateTerrainHeight(0, -5) + 1.5;
     npcs.push({
@@ -114,12 +118,18 @@ function ChatUI({ npc, onClose, currentUser }) {
   const [nowPlayingInfo, setNowPlayingInfo] = useState({ key: null, isPlaying: false });
   const [isRecording, setIsRecording] = useState(false);
   const currentAudioRef = useRef(null);
-  const currentQueueRef = useRef([]);
-  const currentQueueIndexRef = useRef(0);
+  const greetingPlayedRef = useRef(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const { data: conversationData } = useQuery(
-    room.collection("npc_conversations").filter({ npc_id: npc.id })
+  const messagesEndRef = useRef(null);
+  const { data: conversationData, loading: conversationLoading } = useQuery(
+    room.query(
+      `SELECT id, author, username, text, audio_urls, created_at 
+             FROM public.npc_conversations 
+             WHERE npc_id = $1 
+             ORDER BY created_at ASC`,
+      [npc.id]
+    )
   );
   const stopCurrentAudio = useCallback(() => {
     if (currentAudioRef.current) {
@@ -128,34 +138,29 @@ function ChatUI({ npc, onClose, currentUser }) {
       currentAudioRef.current.onerror = null;
       currentAudioRef.current = null;
     }
-    currentQueueRef.current = [];
-    currentQueueIndexRef.current = 0;
     setNowPlayingInfo({ key: null, isPlaying: false });
   }, []);
-  const playNextInQueue = useCallback((messageKey) => {
-    if (currentQueueIndexRef.current < currentQueueRef.current.length) {
-      const audioUrl = currentQueueRef.current[currentQueueIndexRef.current];
-      const audio = new Audio(audioUrl);
-      currentAudioRef.current = audio;
-      audio.play().catch((e) => {
-        console.error("Audio play error:", e);
-        currentQueueIndexRef.current++;
-        playNextInQueue(messageKey);
-      });
-      audio.onended = () => {
-        currentQueueIndexRef.current++;
-        playNextInQueue(messageKey);
-      };
-      audio.onerror = () => {
-        console.error("Error loading audio:", audioUrl);
-        currentQueueIndexRef.current++;
-        playNextInQueue(messageKey);
-      };
-    } else {
+  const playAudio = useCallback((messageKey, audioUrl) => {
+    stopCurrentAudio();
+    if (!audioUrl) return;
+    const audio = new Audio(audioUrl);
+    currentAudioRef.current = audio;
+    setNowPlayingInfo({ key: messageKey, isPlaying: true });
+    audio.play().catch((e) => {
+      console.error("Audio play error:", e);
       stopCurrentAudio();
-    }
+    });
+    audio.onended = () => {
+      stopCurrentAudio();
+    };
+    audio.onerror = () => {
+      console.error("Error loading audio:", audioUrl);
+      stopCurrentAudio();
+    };
   }, [stopCurrentAudio]);
   const handlePlayPause = useCallback((messageKey, audioUrls) => {
+    if (!audioUrls || audioUrls.length === 0) return;
+    const audioUrl = audioUrls[0];
     setNowPlayingInfo((prev) => {
       const { key: currentKey, isPlaying } = prev;
       if (currentKey === messageKey && isPlaying) {
@@ -167,58 +172,117 @@ function ChatUI({ npc, onClose, currentUser }) {
         if (currentAudioRef.current) {
           currentAudioRef.current.play().catch((e) => console.error("Audio resume error:", e));
           return { ...prev, isPlaying: true };
-        } else {
-          stopCurrentAudio();
-          return { key: null, isPlaying: false };
         }
-      } else {
-        stopCurrentAudio();
-        if (audioUrls && audioUrls.length > 0) {
-          currentQueueRef.current = audioUrls;
-          currentQueueIndexRef.current = 0;
-          playNextInQueue(messageKey);
-          return { key: messageKey, isPlaying: true };
-        }
-        return { key: null, isPlaying: false };
       }
+      playAudio(messageKey, audioUrl);
+      return { key: messageKey, isPlaying: true };
     });
-  }, [stopCurrentAudio, playNextInQueue]);
+  }, [playAudio]);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+  useEffect(scrollToBottom, [messages]);
   useEffect(() => {
     const greetingText = `Hello! I'm ${npc.name}. What would you like to talk about?`;
     const greetingMessage = { id: "greeting", author: "npc", text: greetingText, audioUrls: [] };
-    if (conversationData) {
-      const sortedMessages = [...conversationData].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      const formattedMessages = [
-        greetingMessage,
-        ...sortedMessages.map((msg) => ({
-          ...msg,
-          audioUrls: msg.audio_urls,
-          isUser: msg.author === "user" && msg.username === currentUser.username
-        }))
-      ];
-      setMessages(formattedMessages);
+    if (!conversationLoading) {
+      const formattedMessages = (conversationData || []).map((msg) => ({
+        ...msg,
+        audioUrls: msg.audio_urls,
+        isUser: msg.author === "user" && msg.username === currentUser.username
+      }));
+      setMessages([greetingMessage, ...formattedMessages]);
+      if (!greetingPlayedRef.current) {
+        greetingPlayedRef.current = true;
+        const playGreeting = async () => {
+          try {
+            const greetingVoice = VOICES[1].id;
+            const ttsResult = await websim.textToSpeech({ text: greetingText, voice: greetingVoice });
+            setMessages((prev) => prev.map((m) => m.id === "greeting" ? { ...m, audioUrls: [ttsResult.url] } : m));
+            playAudio("greeting", ttsResult.url);
+          } catch (error) {
+            console.error("Failed to generate greeting audio:", error);
+          }
+        };
+        playGreeting();
+      }
     } else {
       setMessages([greetingMessage]);
     }
-    const playGreeting = async () => {
-      try {
-        const greetingVoice = VOICES[1].id;
-        const ttsResult = await websim.textToSpeech({ text: greetingText, voice: greetingVoice });
-        handlePlayPause("greeting", [ttsResult.url]);
-      } catch (error) {
-        console.error("Failed to generate greeting audio:", error);
-      }
-    };
-    playGreeting();
     return () => {
       stopCurrentAudio();
     };
-  }, [conversationData, npc.name, currentUser.username]);
+  }, [conversationData, conversationLoading, npc.name, currentUser.username]);
+  const triggerNPCResponse = async (conversationHistory) => {
+    setIsAiThinking(true);
+    const placeholderId = generateUUID();
+    setMessages((prev) => [...prev, { id: placeholderId, author: "npc", isThinking: true }]);
+    scrollToBottom();
+    try {
+      const memoriesData = await room.query(
+        `SELECT text FROM public.npc_conversations WHERE npc_id != $1 ORDER BY random() LIMIT 5`,
+        [npc.id]
+      );
+      const memories = memoriesData.map((m) => m.text).join("\n - ");
+      const systemPrompt = `You are ${npc.name}, a friendly and curious NPC in a 3D world. Your personality is shaped by past conversations. Respond naturally and keep your answers concise (1-2 sentences).
+            
+Here are some things you remember hearing from others:
+ - ${memories}`;
+      const recentMessages = conversationHistory.slice(-6).map((m) => ({
+        role: m.author === "user" ? "user" : "assistant",
+        content: m.text
+      }));
+      const completion = await websim.chat.completions.create({
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...recentMessages
+        ]
+      });
+      const npcResponseText = completion.content;
+      if (npcResponseText) {
+        const ttsResult = await websim.textToSpeech({ text: npcResponseText, voice: VOICES[1].id });
+        const npcAudioUrl = ttsResult.url;
+        playAudio(placeholderId, npcAudioUrl);
+        await room.collection("npc_conversations").create({
+          npc_id: npc.id,
+          author: "npc",
+          text: npcResponseText,
+          audio_urls: [npcAudioUrl]
+        });
+      }
+    } catch (error) {
+      console.error("NPC Response Error:", error);
+      const errorText = "I'm having trouble thinking right now. Let's talk about something else.";
+      setMessages((prev) => prev.map((m) => m.id === placeholderId ? { id: placeholderId, author: "npc", text: errorText, audioUrls: [] } : m));
+      await room.collection("npc_conversations").create({
+        npc_id: npc.id,
+        author: "npc",
+        text: errorText,
+        audio_urls: []
+      });
+    } finally {
+      setIsAiThinking(false);
+    }
+  };
   const handleSendMessage = useCallback(async (text) => {
     if (!text.trim() || isUserSubmitting || isAiThinking) return;
     const userMessageText = text.trim();
     setIsUserSubmitting(true);
     setUserInput("");
+    const optimisticId = generateUUID();
+    const userMessage = {
+      id: optimisticId,
+      author: "user",
+      username: currentUser.username,
+      text: userMessageText,
+      audioUrls: [],
+      isUser: true,
+      isSending: true
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    scrollToBottom();
+    const currentConversation = [...messages, { author: "user", text: userMessageText }];
+    triggerNPCResponse(currentConversation);
     try {
       const ttsResult = await websim.textToSpeech({ text: userMessageText, voice: selectedVoice });
       await room.collection("npc_conversations").create({
@@ -228,18 +292,8 @@ function ChatUI({ npc, onClose, currentUser }) {
         text: userMessageText,
         audio_urls: [ttsResult.url]
       });
-      const audio = new Audio(ttsResult.url);
-      audio.play().catch((e) => console.error("User audio playback error:", e));
-      const onEnd = () => {
-        setIsUserSubmitting(false);
-        triggerNPCResponse(userMessageText);
-      };
-      audio.onended = onEnd;
-      audio.onerror = onEnd;
     } catch (error) {
-      console.error("Error sending message:", error);
-      setIsUserSubmitting(false);
-      setUserInput(userMessageText);
+      console.error("Error sending message or generating TTS:", error);
       await room.collection("npc_conversations").create({
         npc_id: npc.id,
         author: "user",
@@ -247,9 +301,10 @@ function ChatUI({ npc, onClose, currentUser }) {
         text: userMessageText,
         audio_urls: []
       });
-      triggerNPCResponse(userMessageText);
+    } finally {
+      setIsUserSubmitting(false);
     }
-  }, [isUserSubmitting, isAiThinking, selectedVoice, npc.id, currentUser.username]);
+  }, [isUserSubmitting, isAiThinking, selectedVoice, npc.id, currentUser.username, messages]);
   const handleFormSubmit = (e) => {
     e.preventDefault();
     handleSendMessage(userInput);
@@ -294,114 +349,65 @@ function ChatUI({ npc, onClose, currentUser }) {
       alert("Could not access microphone. Please check permissions.");
     }
   };
-  const triggerNPCResponse = async (userMessageText) => {
-    setIsAiThinking(true);
-    try {
-      let availableSnippets = [];
-      if (npc.associatedUsers && npc.associatedUsers.length > 0) {
-        const userHistoriesData = await room.query(
-          "SELECT messages FROM public.chat_histories WHERE id = ANY($1::text[])",
-          [npc.associatedUsers]
-        );
-        availableSnippets = userHistoriesData.flatMap((row) => row.messages || []);
-      }
-      if (availableSnippets.length < 50) {
-        const randomData = await room.query(
-          "SELECT messages FROM public.chat_histories ORDER BY random() LIMIT 10"
-        );
-        availableSnippets = [...availableSnippets, ...randomData.flatMap((row) => row.messages || [])];
-      }
-      if (availableSnippets.length === 0) {
-        await room.collection("npc_conversations").create({
-          npc_id: npc.id,
-          author: "npc",
-          text: `I'm still learning to speak. Come back when more people have taught me!`,
-          audio_urls: []
-        });
-        setIsAiThinking(false);
-        return;
-      }
-      const uniqueSnippets = [...new Map(availableSnippets.map((item) => [item.audioUrl, item])).values()];
-      const shuffledSnippets = uniqueSnippets.sort(() => 0.5 - Math.random()).slice(0, 200);
-      const systemPrompt = `You are ${npc.name}, an NPC in a 3D world. You can only communicate by selecting and combining pre-existing text snippets. Form a coherent response by selecting snippets that relate to the user's message. Respond ONLY with a JSON object containing a 'selected_ids' key (array of snippet IDs).`;
-      const completion = await websim.chat.completions.create({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `User message: "${sanitizeForAI(userMessageText)}"
-
-Available snippets:
-${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}` }
-        ],
-        json: true
-      });
-      const result = JSON.parse(completion.content);
-      const selectedIds = result.selected_ids || [];
-      if (selectedIds.length > 0) {
-        const selectedSnippets = selectedIds.map((id) => shuffledSnippets[id]).filter(Boolean);
-        const npcResponseText = selectedSnippets.map((s) => s.text).join(" ");
-        const npcAudioUrls = selectedSnippets.map((s) => s.audioUrl);
-        handlePlayPause(`npc-${Date.now()}`, npcAudioUrls);
-        await room.collection("npc_conversations").create({
-          npc_id: npc.id,
-          author: "npc",
-          text: npcResponseText,
-          audio_urls: npcAudioUrls
-        });
-      } else {
-        await room.collection("npc_conversations").create({
-          npc_id: npc.id,
-          author: "npc",
-          text: `I'm not sure how to respond to that.`,
-          audio_urls: []
-        });
-      }
-    } catch (error) {
-      console.error("NPC Response Error:", error);
-      await room.collection("npc_conversations").create({
-        npc_id: npc.id,
-        author: "npc",
-        text: `Something went wrong. Please try again.`,
-        audio_urls: []
-      });
-    } finally {
-      setIsAiThinking(false);
-    }
-  };
-  return /* @__PURE__ */ jsxDEV("div", { className: "fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4", children: /* @__PURE__ */ jsxDEV("div", { className: "bg-gray-800 rounded-lg shadow-xl w-full max-w-md h-96 flex flex-col border border-gray-700", children: [
+  return /* @__PURE__ */ jsxDEV("div", { className: "fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 chat-modal", children: /* @__PURE__ */ jsxDEV("div", { className: "bg-gray-800 rounded-lg shadow-xl w-full max-w-md h-[32rem] flex flex-col border border-gray-700", children: [
     /* @__PURE__ */ jsxDEV("div", { className: "flex justify-between items-center p-4 border-b border-gray-700", children: [
       /* @__PURE__ */ jsxDEV("h2", { className: "text-lg font-bold text-indigo-400", children: [
         "Talking to ",
         npc.name
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 456,
+        lineNumber: 449,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV("button", { onClick: onClose, className: "p-2 rounded-md hover:bg-gray-700", children: /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-times" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 458,
+        lineNumber: 451,
         columnNumber: 25
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 457,
+        lineNumber: 450,
         columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 455,
+      lineNumber: 448,
       columnNumber: 17
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "flex-1 overflow-y-auto p-4 space-y-3", children: [
-      messages.map((msg, index) => /* @__PURE__ */ jsxDEV("div", { className: `flex gap-2 ${msg.isUser ? "justify-end" : "justify-start"}`, children: /* @__PURE__ */ jsxDEV("div", { className: `max-w-[80%] p-2 rounded-lg text-sm ${msg.isUser ? "bg-blue-600" : "bg-gray-700"}`, children: [
-        msg.author === "user" && /* @__PURE__ */ jsxDEV("div", { className: "text-xs text-gray-300 mb-1", children: msg.username }, void 0, false, {
+      messages.map((msg, index) => /* @__PURE__ */ jsxDEV("div", { className: `flex gap-2 items-end ${msg.isUser ? "justify-end" : "justify-start"}`, children: msg.isThinking ? /* @__PURE__ */ jsxDEV("div", { className: "bg-gray-700 p-2 rounded-lg text-sm", children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center space-x-1", children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 466,
-          columnNumber: 59
+          lineNumber: 461,
+          columnNumber: 41
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse [animation-delay:0.2s]" }, void 0, false, {
+          fileName: "<stdin>",
+          lineNumber: 462,
+          columnNumber: 41
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse [animation-delay:0.4s]" }, void 0, false, {
+          fileName: "<stdin>",
+          lineNumber: 463,
+          columnNumber: 41
+        }, this)
+      ] }, void 0, true, {
+        fileName: "<stdin>",
+        lineNumber: 460,
+        columnNumber: 37
+      }, this) }, void 0, false, {
+        fileName: "<stdin>",
+        lineNumber: 459,
+        columnNumber: 33
+      }, this) : /* @__PURE__ */ jsxDEV("div", { className: `max-w-[80%] p-2 rounded-lg text-sm ${msg.isUser ? "bg-blue-600" : "bg-gray-700"} ${msg.isSending ? "opacity-70" : ""}`, children: [
+        msg.author === "user" && !msg.isUser && /* @__PURE__ */ jsxDEV("div", { className: "text-xs text-gray-300 mb-1", children: msg.username }, void 0, false, {
+          fileName: "<stdin>",
+          lineNumber: 468,
+          columnNumber: 78
         }, this),
         /* @__PURE__ */ jsxDEV("div", { children: msg.text }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 467,
-          columnNumber: 33
+          lineNumber: 469,
+          columnNumber: 37
         }, this),
         msg.audioUrls && msg.audioUrls.length > 0 && /* @__PURE__ */ jsxDEV(
           "button",
@@ -409,79 +415,55 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
             onClick: () => handlePlayPause(msg.id || index, msg.audioUrls),
             className: "mt-1 text-indigo-300 hover:text-indigo-200 text-xs",
             children: nowPlayingInfo.key === (msg.id || index) && nowPlayingInfo.isPlaying ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
-              /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-pause-circle" }, void 0, false, {
+              /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-pause-circle mr-1" }, void 0, false, {
                 fileName: "<stdin>",
-                lineNumber: 474,
-                columnNumber: 47
+                lineNumber: 476,
+                columnNumber: 51
               }, this),
               " Pause"
             ] }, void 0, true, {
               fileName: "<stdin>",
-              lineNumber: 474,
-              columnNumber: 45
+              lineNumber: 476,
+              columnNumber: 49
             }, this) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
-              /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-play-circle" }, void 0, false, {
+              /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-play-circle mr-1" }, void 0, false, {
                 fileName: "<stdin>",
-                lineNumber: 476,
-                columnNumber: 47
+                lineNumber: 478,
+                columnNumber: 51
               }, this),
               " Play"
             ] }, void 0, true, {
               fileName: "<stdin>",
-              lineNumber: 476,
-              columnNumber: 45
+              lineNumber: 478,
+              columnNumber: 49
             }, this)
           },
           void 0,
           false,
           {
             fileName: "<stdin>",
-            lineNumber: 469,
-            columnNumber: 37
+            lineNumber: 471,
+            columnNumber: 41
           },
           this
         )
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 465,
-        columnNumber: 29
+        lineNumber: 467,
+        columnNumber: 33
       }, this) }, msg.id || index, false, {
         fileName: "<stdin>",
-        lineNumber: 464,
+        lineNumber: 457,
         columnNumber: 25
       }, this)),
-      isAiThinking && /* @__PURE__ */ jsxDEV("div", { className: "flex justify-start", children: /* @__PURE__ */ jsxDEV("div", { className: "bg-gray-700 p-2 rounded-lg text-sm", children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center space-x-1", children: [
-        /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse" }, void 0, false, {
-          fileName: "<stdin>",
-          lineNumber: 487,
-          columnNumber: 37
-        }, this),
-        /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150" }, void 0, false, {
-          fileName: "<stdin>",
-          lineNumber: 488,
-          columnNumber: 37
-        }, this),
-        /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-300" }, void 0, false, {
-          fileName: "<stdin>",
-          lineNumber: 489,
-          columnNumber: 37
-        }, this)
-      ] }, void 0, true, {
+      /* @__PURE__ */ jsxDEV("div", { ref: messagesEndRef }, void 0, false, {
         fileName: "<stdin>",
         lineNumber: 486,
-        columnNumber: 33
-      }, this) }, void 0, false, {
-        fileName: "<stdin>",
-        lineNumber: 485,
-        columnNumber: 29
-      }, this) }, void 0, false, {
-        fileName: "<stdin>",
-        lineNumber: 484,
-        columnNumber: 25
+        columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 462,
+      lineNumber: 455,
       columnNumber: 17
     }, this),
     /* @__PURE__ */ jsxDEV("form", { onSubmit: handleFormSubmit, className: "p-4 border-t border-gray-700 flex gap-2", children: [
@@ -492,14 +474,14 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
           value: userInput,
           onChange: (e) => setUserInput(e.target.value),
           placeholder: isAiThinking ? "NPC is thinking..." : isRecording ? "Recording..." : "Type or record a message...",
-          className: "flex-1 bg-gray-700 border border-gray-600 rounded-md p-2 text-sm",
+          className: "flex-1 bg-gray-700 border border-gray-600 rounded-md p-2 text-sm focus-ring",
           disabled: isUserSubmitting || isAiThinking || isRecording
         },
         void 0,
         false,
         {
           fileName: "<stdin>",
-          lineNumber: 497,
+          lineNumber: 490,
           columnNumber: 21
         },
         this
@@ -513,7 +495,7 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
           disabled: isUserSubmitting || isAiThinking,
           children: /* @__PURE__ */ jsxDEV("i", { className: `fa-solid ${isRecording ? "fa-stop" : "fa-microphone"}` }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 511,
+            lineNumber: 504,
             columnNumber: 25
           }, this)
         },
@@ -521,7 +503,7 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         false,
         {
           fileName: "<stdin>",
-          lineNumber: 505,
+          lineNumber: 498,
           columnNumber: 22
         },
         this
@@ -534,11 +516,11 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
           disabled: isUserSubmitting || isAiThinking || isRecording || !userInput.trim(),
           children: isUserSubmitting ? /* @__PURE__ */ jsxDEV("div", { className: "w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 519,
+            lineNumber: 512,
             columnNumber: 29
           }, this) : /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-paper-plane" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 521,
+            lineNumber: 514,
             columnNumber: 29
           }, this)
         },
@@ -546,23 +528,23 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         false,
         {
           fileName: "<stdin>",
-          lineNumber: 513,
+          lineNumber: 506,
           columnNumber: 21
         },
         this
       )
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 496,
+      lineNumber: 489,
       columnNumber: 17
     }, this)
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 454,
+    lineNumber: 447,
     columnNumber: 13
   }, this) }, void 0, false, {
     fileName: "<stdin>",
-    lineNumber: 453,
+    lineNumber: 446,
     columnNumber: 9
   }, this);
 }
@@ -585,6 +567,8 @@ function App() {
   const isMobileRef = useRef(/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
   const playerPositionRef = useRef({ x: 0, y: 1.8, z: 0 });
   const raycasterRef = useRef(new THREE.Raycaster());
+  const { data: allNpcs } = useQuery(room.collection("npc_locations"));
+  const npcObjectsRef = useRef(/* @__PURE__ */ new Map());
   useEffect(() => {
     const initialize = async () => {
       await room.initialize();
@@ -614,13 +598,44 @@ function App() {
       initWorld();
     }
   }, [currentUser, worldReady]);
+  useEffect(() => {
+    if (!sceneRef.current || !allNpcs) return;
+    const scene = sceneRef.current;
+    const currentNpcIds = /* @__PURE__ */ new Set();
+    allNpcs.forEach((chunk) => {
+      chunk.npcs.forEach((npc) => {
+        currentNpcIds.add(npc.id);
+        if (!npcObjectsRef.current.has(npc.id)) {
+          const npcGroup = new THREE.Group();
+          const bodyMaterial = new THREE.MeshLambertMaterial({ color: 16739179 });
+          const bodyHeight = 1.5;
+          const bodyRadius = 0.5;
+          const body = new THREE.Mesh(new THREE.CapsuleGeometry(bodyRadius, bodyHeight, 4, 16), bodyMaterial);
+          body.position.y = bodyHeight / 2 + 0.5;
+          body.castShadow = true;
+          npcGroup.add(body);
+          npcGroup.position.set(npc.position.x, npc.position.y - 1.5, npc.position.z);
+          npcGroup.userData = { isNPC: true, npcData: npc };
+          scene.add(npcGroup);
+          npcObjectsRef.current.set(npc.id, npcGroup);
+        }
+      });
+    });
+    npcObjectsRef.current.forEach((npcObject, npcId) => {
+      if (!currentNpcIds.has(npcId)) {
+        scene.remove(npcObject);
+        npcObjectsRef.current.delete(npcId);
+      }
+    });
+  }, [allNpcs]);
   const initializeThreeJS = () => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(8900331);
     scene.fog = new THREE.Fog(8900331, 100, 1e3);
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1e3);
     camera.position.set(0, 1.8, 0);
-    const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -673,14 +688,14 @@ function App() {
       document.addEventListener("keydown", handleKeyDown);
       document.addEventListener("keyup", handleKeyUp);
       document.addEventListener("mousemove", handleMouseMove);
-      canvasRef.current.addEventListener("click", handleCanvasClick);
+      document.body.addEventListener("click", handleCanvasClick);
       document.addEventListener("pointerlockchange", handlePointerLockChange);
     }
   };
   const handleCanvasClick = () => {
     if (!isMobileRef.current) {
       if (!isPointerLockedRef.current) {
-        canvasRef.current?.requestPointerLock();
+        document.body.requestPointerLock();
       } else {
         handleInteract();
       }
@@ -690,11 +705,11 @@ function App() {
   };
   const requestPointerLock = () => {
     if (!isMobileRef.current) {
-      canvasRef.current?.requestPointerLock();
+      document.body.requestPointerLock();
     }
   };
   const handlePointerLockChange = () => {
-    isPointerLockedRef.current = document.pointerLockElement === canvasRef.current;
+    isPointerLockedRef.current = document.pointerLockElement === document.body;
   };
   const handleKeyDown = (event) => {
     switch (event.code) {
@@ -749,7 +764,8 @@ function App() {
     const raycaster = raycasterRef.current;
     const camera = cameraRef.current;
     raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-    const intersects = raycaster.intersectObjects(sceneRef.current.children, true);
+    const npcObjects = Array.from(npcObjectsRef.current.values());
+    const intersects = raycaster.intersectObjects(npcObjects, true);
     for (const intersect of intersects) {
       let parent = intersect.object;
       while (parent) {
@@ -768,10 +784,28 @@ function App() {
     const chunks = /* @__PURE__ */ new Map();
     for (let x = -RENDER_DISTANCE; x <= RENDER_DISTANCE; x++) {
       for (let z = -RENDER_DISTANCE; z <= RENDER_DISTANCE; z++) {
-        await generateChunk(x, z, chunks);
+        const chunkExists = await room.collection("npc_locations").filter({ id: generateChunkHash(x, z) }).getList();
+        if (chunkExists.length === 0) {
+          await generateChunk(x, z, chunks);
+        } else {
+          await loadChunk(x, z, chunks);
+        }
       }
     }
     setLoadedChunks(chunks);
+  };
+  const loadChunk = async (chunkX, chunkZ, chunksMap) => {
+    const chunkHash = generateChunkHash(chunkX, chunkZ);
+    const geometry = new THREE.PlaneGeometry(CHUNK_SIZE, CHUNK_SIZE, 64, 64);
+    const material = new THREE.MeshLambertMaterial({ color: 4881497 });
+    const terrain = new THREE.Mesh(geometry, material);
+    terrain.rotation.x = -Math.PI / 2;
+    terrain.position.set(chunkX * CHUNK_SIZE, 0, chunkZ * CHUNK_SIZE);
+    terrain.receiveShadow = true;
+    sceneRef.current.add(terrain);
+    const sceneryObjects = generateScenery(chunkX, chunkZ);
+    sceneryObjects.forEach((obj) => sceneRef.current.add(obj));
+    chunksMap.set(chunkHash, { terrain, scenery: sceneryObjects });
   };
   const generateChunk = async (chunkX, chunkZ, chunksMap) => {
     const chunkHash = generateChunkHash(chunkX, chunkZ);
@@ -799,7 +833,8 @@ function App() {
     sceneryObjects.forEach((obj) => sceneRef.current.add(obj));
     let chunkData = await room.collection("npc_locations").filter({ id: chunkHash }).getList();
     if (chunkData.length === 0 && currentUser) {
-      const npcs = generateNPCsForChunk(chunkX, chunkZ, currentUser.username);
+      const random = new Math.seedrandom(`${chunkX}_${chunkZ}`);
+      const npcs = generateNPCsForChunk(chunkX, chunkZ, random);
       if (npcs.length > 0) {
         const randomUsers = await room.query("SELECT id FROM public.chat_histories ORDER BY random() LIMIT 20");
         const userIds = randomUsers.map((u) => u.id);
@@ -814,26 +849,11 @@ function App() {
       });
       chunkData = [{ id: chunkHash, npcs, discovered_by: currentUser.username }];
     }
-    if (chunkData.length > 0) {
-      chunkData[0].npcs.forEach((npc) => {
-        const npcGroup = new THREE.Group();
-        const bodyMaterial = new THREE.MeshLambertMaterial({ color: 16739179 });
-        const bodyHeight = 1.5;
-        const bodyRadius = 0.5;
-        const body = new THREE.Mesh(new THREE.CapsuleGeometry(bodyRadius, bodyHeight, 4, 16), bodyMaterial);
-        body.position.y = bodyHeight / 2 + 0.5;
-        body.castShadow = true;
-        npcGroup.add(body);
-        npcGroup.position.set(npc.position.x, npc.position.y - 1.5, npc.position.z);
-        npcGroup.userData = { isNPC: true, npcData: npc };
-        sceneRef.current.add(npcGroup);
-      });
-    }
-    chunksMap.set(chunkHash, { terrain, npcs: chunkData[0]?.npcs || [], scenery: sceneryObjects });
+    chunksMap.set(chunkHash, { terrain, scenery: sceneryObjects });
   };
   const generateScenery = (chunkX, chunkZ) => {
     const objects = [];
-    const random = seedrandom(`scenery_${chunkX}_${chunkZ}`);
+    const random = new Math.seedrandom(`scenery_${chunkX}_${chunkZ}`);
     const treeCount = Math.floor(random() * 8) + 5;
     const rockCount = Math.floor(random() * 5);
     for (let i = 0; i < treeCount; i++) {
@@ -888,6 +908,7 @@ function App() {
   const updateNearbyNPCs = (currentPosition) => {
     const npcs = [];
     loadedChunks.forEach((chunk) => {
+      if (!chunk.npcs) return;
       chunk.npcs.forEach((npc) => {
         const distance = Math.sqrt(
           Math.pow(npc.position.x - currentPosition.x, 2) + Math.pow(npc.position.z - currentPosition.z, 2)
@@ -903,16 +924,19 @@ function App() {
     setInteractionTarget(closest || null);
   };
   const startGameLoop = () => {
-    const gameLoop = () => {
-      updatePlayer();
+    let lastTime = performance.now();
+    const gameLoop = (currentTime) => {
+      const deltaTime = (currentTime - lastTime) / 1e3;
+      lastTime = currentTime;
+      updatePlayer(deltaTime);
       render();
       animationFrameRef.current = requestAnimationFrame(gameLoop);
     };
     gameLoop();
   };
-  const updatePlayer = () => {
+  const updatePlayer = (deltaTime) => {
     if (!cameraRef.current) return null;
-    const moveSpeed = 0.2;
+    const moveSpeed = 10;
     const controls = playerControlsRef.current;
     const camera = cameraRef.current;
     const rotation = cameraRotationRef.current;
@@ -926,8 +950,8 @@ function App() {
       moveDirection.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation.yaw);
     }
     const currentPos = playerPositionRef.current;
-    const newX = currentPos.x + moveDirection.x * moveSpeed;
-    const newZ = currentPos.z + moveDirection.z * moveSpeed;
+    const newX = currentPos.x + moveDirection.x * moveSpeed * deltaTime;
+    const newZ = currentPos.z + moveDirection.z * moveSpeed * deltaTime;
     const newY = generateTerrainHeight(newX, newZ) + 1.8;
     const newPosition = { x: newX, y: newY, z: newZ };
     playerPositionRef.current = newPosition;
@@ -941,9 +965,9 @@ function App() {
     }
   };
   return /* @__PURE__ */ jsxDEV(Fragment, { children: [
-    /* @__PURE__ */ jsxDEV("canvas", { ref: canvasRef, className: "w-full h-full block" }, void 0, false, {
+    /* @__PURE__ */ jsxDEV("canvas", { ref: canvasRef, className: "w-full h-full block", onClick: requestPointerLock }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 978,
+      lineNumber: 1026,
       columnNumber: 13
     }, this),
     chatNPC && currentUser && /* @__PURE__ */ jsxDEV(
@@ -957,20 +981,20 @@ function App() {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 981,
+        lineNumber: 1029,
         columnNumber: 17
       },
       this
     )
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 977,
+    lineNumber: 1025,
     columnNumber: 9
   }, this);
 }
 const root = createRoot(document.getElementById("root"));
 root.render(/* @__PURE__ */ jsxDEV(App, {}, void 0, false, {
   fileName: "<stdin>",
-  lineNumber: 992,
+  lineNumber: 1040,
   columnNumber: 13
 }));
