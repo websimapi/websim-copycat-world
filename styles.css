@@ -1,0 +1,182 @@
+body {
+    overscroll-behavior: none;
+    margin: 0;
+    padding: 0;
+}
+
+#root {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+/* Hide scrollbars */
+body::-webkit-scrollbar {
+    display: none;
+}
+
+body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Scrollbar styling for webkit browsers */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #1f2937; /* bg-gray-800 */
+}
+::-webkit-scrollbar-thumb {
+    background: #4b5563; /* bg-gray-600 */
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #6b7280; /* bg-gray-500 */
+}
+
+/* Custom focus ring */
+.focus-ring {
+    transition: box-shadow 0.2s ease-in-out;
+}
+.focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); /* indigo-500 with opacity */
+}
+
+/* Animate settings panel */
+.settings-panel {
+    transition: transform 0.3s ease-in-out;
+}
+
+.settings-panel.open {
+    transform: translateY(0);
+}
+
+.settings-panel.closed {
+    transform: translateY(100%);
+}
+
+.chat-bubble {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slide-in 0.3s forwards;
+}
+
+.chat-bubble > div:last-child {
+    max-width: calc(100% - 2.5rem); /* 40px avatar + 8px gap */
+}
+
+@keyframes slide-in {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Voice Selector Modal */
+.voice-selector-modal {
+    transition: opacity 0.3s ease-in-out;
+}
+.voice-selector-content {
+    transition: transform 0.3s ease-in-out;
+    transform: translateY(100%);
+}
+.voice-selector-modal.open .voice-selector-content {
+    transform: translateY(0);
+}
+
+/* Chat Mode Tabs */
+.chat-mode-tab {
+    transition: all 0.2s ease-in-out;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    width: 44px;
+    height: 24px;
+    position: relative;
+    display: inline-block;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #4b5563; /* bg-gray-600 */
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #4f46e5; /* bg-indigo-600 */
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.glow-animation {
+    animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 3px #4f46e5, 0 0 6px #4f46e5, 0 0 9px #4f46e5;
+    }
+    to {
+        box-shadow: 0 0 6px #6366f1, 0 0 12px #6366f1, 0 0 18px #6366f1;
+    }
+}
+
+/* 3D World specific styles */
+canvas {
+    display: block;
+    cursor: none;
+}
+
+/* Mobile nipple styling */
+[data-nipple] {
+    opacity: 0.7;
+}
+
+/* Chat UI animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.chat-modal {
+    animation: slideIn 0.3s ease-out;
+}

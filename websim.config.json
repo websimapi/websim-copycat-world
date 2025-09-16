@@ -1,0 +1,58 @@
+{
+  "database": {
+    "schema": {
+      "chat_histories": {
+        "id": {
+          "type": "text",
+          "description": "User ID, serves as the primary key."
+        },
+        "messages": {
+          "type": "jsonb",
+          "description": "An array of message objects from the user. Each object contains text, audioUrl, timestamp, and voice."
+        }
+      },
+      "npc_locations": {
+        "id": {
+          "type": "text",
+          "description": "Chunk coordinate as 'x,z' (e.g., '0,0', '1,-1')"
+        },
+        "npcs": {
+          "type": "jsonb",
+          "description": "Array of NPC objects with position, name, and associated user IDs for response pool"
+        },
+        "discovered_by": {
+          "type": "text",
+          "description": "Username of the first player to discover this chunk"
+        }
+      },
+      "npc_conversations": {
+        "id": {
+          "type": "uuid",
+          "description": "Unique identifier for the conversation message"
+        },
+        "npc_id": {
+          "type": "text",
+          "description": "NPC identifier (chunk_x,chunk_z,npc_index)"
+        },
+        "author": {
+          "type": "text",
+          "description": "'user' or 'npc'"
+        },
+        "username": {
+          "type": "text",
+          "description": "Username of the sender if author is 'user'"
+        },
+        "text": {
+          "type": "text",
+          "description": "The text content of the message"
+        },
+        "audio_urls": {
+          "type": "jsonb",
+          "description": "An array of audio URLs for the message"
+        }
+      }
+    },
+    "instructions": "The world is divided into chunks. Each chunk can contain multiple NPCs. NPCs are procedurally generated when a chunk is first discovered and their response pools grow as players interact with them."
+  }
+}
+
