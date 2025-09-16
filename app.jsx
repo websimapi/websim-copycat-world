@@ -70,7 +70,7 @@ function generateTerrainHeight(x, z) {
 }
 function generateNPCsForChunk(chunkX, chunkZ, discoveredBy) {
   const npcs = [];
-  const random = new THREE.MathUtils.seedrandom(`${chunkX}_${chunkZ}`);
+  const random = THREE.MathUtils.seedrandom(`${chunkX}_${chunkZ}`);
   if (random() > NPC_SPAWN_CHANCE) {
     return npcs;
   }
@@ -702,7 +702,7 @@ function App() {
   };
   const generateScenery = (chunkX, chunkZ) => {
     const objects = [];
-    const random = new THREE.MathUtils.seedrandom(`scenery_${chunkX}_${chunkZ}`);
+    const random = THREE.MathUtils.seedrandom(`scenery_${chunkX}_${chunkZ}`);
     const treeCount = Math.floor(random() * 8) + 5;
     const rockCount = Math.floor(random() * 5);
     for (let i = 0; i < treeCount; i++) {
