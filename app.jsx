@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { WebsimSocket, useQuery } from "@websim/use-query";
 import * as THREE from "three";
 import nipplejs from "nipplejs";
+import seedrandom from "seedrandom";
 const room = new WebsimSocket();
 const VOICES = [
   { id: "en-male", name: "English (Male)", flag: "\u{1F1EC}\u{1F1E7}" },
@@ -70,7 +71,7 @@ function generateTerrainHeight(x, z) {
 }
 function generateNPCsForChunk(chunkX, chunkZ, discoveredBy) {
   const npcs = [];
-  const random = THREE.MathUtils.seedrandom(`${chunkX}_${chunkZ}`);
+  const random = seedrandom(`${chunkX}_${chunkZ}`);
   if (random() > NPC_SPAWN_CHANCE) {
     return npcs;
   }
@@ -297,33 +298,33 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         npc.name
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 360,
+        lineNumber: 361,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV("button", { onClick: onClose, className: "p-2 rounded-md hover:bg-gray-700", children: /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-times" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 362,
+        lineNumber: 363,
         columnNumber: 25
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 361,
+        lineNumber: 362,
         columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 359,
+      lineNumber: 360,
       columnNumber: 17
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "flex-1 overflow-y-auto p-4 space-y-3", children: [
       messages.map((msg, index) => /* @__PURE__ */ jsxDEV("div", { className: `flex gap-2 ${msg.isUser ? "justify-end" : "justify-start"}`, children: /* @__PURE__ */ jsxDEV("div", { className: `max-w-[80%] p-2 rounded-lg text-sm ${msg.isUser ? "bg-blue-600" : "bg-gray-700"}`, children: [
         msg.author === "user" && /* @__PURE__ */ jsxDEV("div", { className: "text-xs text-gray-300 mb-1", children: msg.username }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 370,
+          lineNumber: 371,
           columnNumber: 59
         }, this),
         /* @__PURE__ */ jsxDEV("div", { children: msg.text }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 371,
+          lineNumber: 372,
           columnNumber: 33
         }, this),
         msg.audioUrls && msg.audioUrls.length > 0 && /* @__PURE__ */ jsxDEV(
@@ -334,24 +335,24 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
             children: nowPlayingInfo.key === (msg.id || index) && nowPlayingInfo.isPlaying ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
               /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-pause-circle" }, void 0, false, {
                 fileName: "<stdin>",
-                lineNumber: 378,
+                lineNumber: 379,
                 columnNumber: 47
               }, this),
               " Pause"
             ] }, void 0, true, {
               fileName: "<stdin>",
-              lineNumber: 378,
+              lineNumber: 379,
               columnNumber: 45
             }, this) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
               /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-play-circle" }, void 0, false, {
                 fileName: "<stdin>",
-                lineNumber: 380,
+                lineNumber: 381,
                 columnNumber: 47
               }, this),
               " Play"
             ] }, void 0, true, {
               fileName: "<stdin>",
-              lineNumber: 380,
+              lineNumber: 381,
               columnNumber: 45
             }, this)
           },
@@ -359,52 +360,52 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
           false,
           {
             fileName: "<stdin>",
-            lineNumber: 373,
+            lineNumber: 374,
             columnNumber: 37
           },
           this
         )
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 369,
+        lineNumber: 370,
         columnNumber: 29
       }, this) }, msg.id || index, false, {
         fileName: "<stdin>",
-        lineNumber: 368,
+        lineNumber: 369,
         columnNumber: 25
       }, this)),
       isAiThinking && /* @__PURE__ */ jsxDEV("div", { className: "flex justify-start", children: /* @__PURE__ */ jsxDEV("div", { className: "bg-gray-700 p-2 rounded-lg text-sm", children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center space-x-1", children: [
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 391,
+          lineNumber: 392,
           columnNumber: 37
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 392,
+          lineNumber: 393,
           columnNumber: 37
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-300" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 393,
+          lineNumber: 394,
           columnNumber: 37
         }, this)
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 390,
+        lineNumber: 391,
         columnNumber: 33
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 389,
+        lineNumber: 390,
         columnNumber: 29
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 388,
+        lineNumber: 389,
         columnNumber: 25
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 366,
+      lineNumber: 367,
       columnNumber: 17
     }, this),
     /* @__PURE__ */ jsxDEV("form", { onSubmit: handleSendMessage, className: "p-4 border-t border-gray-700 flex gap-2", children: [
@@ -422,7 +423,7 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         false,
         {
           fileName: "<stdin>",
-          lineNumber: 401,
+          lineNumber: 402,
           columnNumber: 21
         },
         this
@@ -435,11 +436,11 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
           disabled: isUserSubmitting || isAiThinking,
           children: isUserSubmitting ? /* @__PURE__ */ jsxDEV("div", { className: "w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 415,
+            lineNumber: 416,
             columnNumber: 29
           }, this) : /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-paper-plane" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 417,
+            lineNumber: 418,
             columnNumber: 29
           }, this)
         },
@@ -447,23 +448,23 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         false,
         {
           fileName: "<stdin>",
-          lineNumber: 409,
+          lineNumber: 410,
           columnNumber: 21
         },
         this
       )
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 400,
+      lineNumber: 401,
       columnNumber: 17
     }, this)
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 358,
+    lineNumber: 359,
     columnNumber: 13
   }, this) }, void 0, false, {
     fileName: "<stdin>",
-    lineNumber: 357,
+    lineNumber: 358,
     columnNumber: 9
   }, this);
 }
@@ -702,7 +703,7 @@ function App() {
   };
   const generateScenery = (chunkX, chunkZ) => {
     const objects = [];
-    const random = THREE.MathUtils.seedrandom(`scenery_${chunkX}_${chunkZ}`);
+    const random = seedrandom(`scenery_${chunkX}_${chunkZ}`);
     const treeCount = Math.floor(random() * 8) + 5;
     const rockCount = Math.floor(random() * 5);
     for (let i = 0; i < treeCount; i++) {
@@ -810,7 +811,7 @@ function App() {
   return /* @__PURE__ */ jsxDEV(Fragment, { children: [
     /* @__PURE__ */ jsxDEV("canvas", { ref: canvasRef, className: "w-full h-full block" }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 831,
+      lineNumber: 832,
       columnNumber: 13
     }, this),
     interactionTarget && !chatNPC && /* @__PURE__ */ jsxDEV("div", { className: "fixed bottom-10 left-1/2 -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg text-center", children: [
@@ -818,7 +819,7 @@ function App() {
       interactionTarget.name
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 834,
+      lineNumber: 835,
       columnNumber: 17
     }, this),
     chatNPC && currentUser && /* @__PURE__ */ jsxDEV(
@@ -832,20 +833,20 @@ function App() {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 840,
+        lineNumber: 841,
         columnNumber: 17
       },
       this
     )
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 830,
+    lineNumber: 831,
     columnNumber: 9
   }, this);
 }
 const root = createRoot(document.getElementById("root"));
 root.render(/* @__PURE__ */ jsxDEV(App, {}, void 0, false, {
   fileName: "<stdin>",
-  lineNumber: 851,
+  lineNumber: 852,
   columnNumber: 13
 }));
