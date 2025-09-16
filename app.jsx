@@ -4,7 +4,6 @@ import { createRoot } from "react-dom/client";
 import { WebsimSocket, useQuery } from "@websim/use-query";
 import * as THREE from "three";
 import nipplejs from "nipplejs";
-import { createNoise2D } from "simplex-noise";
 const room = new WebsimSocket();
 const VOICES = [
   { id: "en-male", name: "English (Male)", flag: "\u{1F1EC}\u{1F1E7}" },
@@ -19,23 +18,7 @@ const VOICES = [
 const CHUNK_SIZE = 100;
 const RENDER_DISTANCE = 3;
 const NPC_SPAWN_CHANCE = 0.1;
-const noise = createNoise2D();
-const tempNoise = createNoise2D(Math.random);
-const moistureNoise = createNoise2D(Math.random);
 const BIOME_COLORS = {
-  desert: new THREE.Color(9127187),
-  grassland: new THREE.Color(2263842),
-  forest: new THREE.Color(2263842),
-  tundra: new THREE.Color(8900331),
-  ocean: new THREE.Color(16512),
-  mountain: new THREE.Color(9127187),
-  swamp: new THREE.Color(25600),
-  jungle: new THREE.Color(2263842),
-  savanna: new THREE.Color(9127187),
-  taiga: new THREE.Color(2263842),
-  rainforest: new THREE.Color(2263842),
-  steppe: new THREE.Color(9127187),
-  taiga: new THREE.Color(2263842),
   desert: new THREE.Color(9127187),
   grassland: new THREE.Color(2263842),
   forest: new THREE.Color(2263842),
@@ -69,9 +52,7 @@ function generateChunkHash(x, z) {
   return `${x},${z}`;
 }
 function generateTerrainHeight(x, z) {
-  const noise1 = Math.sin(x * 0.01) * Math.cos(z * 0.01) * 10;
-  const noise2 = Math.sin(x * 5e-3) * Math.sin(z * 5e-3) * 20;
-  return noise1 + noise2;
+  return 0;
 }
 function generateNPCsForChunk(chunkX, chunkZ, discoveredBy) {
   const npcs = [];
@@ -85,7 +66,7 @@ function generateNPCsForChunk(chunkX, chunkZ, discoveredBy) {
     const localZ = (random() - 0.5) * CHUNK_SIZE * 0.8;
     const worldX = chunkX * CHUNK_SIZE + localX;
     const worldZ = chunkZ * CHUNK_SIZE + localZ;
-    const worldY = generateTerrainHeight(worldX, worldZ) + 2;
+    const worldY = generateTerrainHeight(worldX, worldZ) + 1.5;
     const npcNames = ["Zara", "Kex", "Vox", "Luna", "Echo", "Pixel", "Sage", "Flux"];
     const name = npcNames[Math.floor(random() * npcNames.length)];
     npcs.push({
@@ -302,33 +283,33 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         npc.name
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 364,
+        lineNumber: 344,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV("button", { onClick: onClose, className: "p-2 rounded-md hover:bg-gray-700", children: /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-times" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 366,
+        lineNumber: 346,
         columnNumber: 25
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 365,
+        lineNumber: 345,
         columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 363,
+      lineNumber: 343,
       columnNumber: 17
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "flex-1 overflow-y-auto p-4 space-y-3", children: [
       messages.map((msg, index) => /* @__PURE__ */ jsxDEV("div", { className: `flex gap-2 ${msg.isUser ? "justify-end" : "justify-start"}`, children: /* @__PURE__ */ jsxDEV("div", { className: `max-w-[80%] p-2 rounded-lg text-sm ${msg.isUser ? "bg-blue-600" : "bg-gray-700"}`, children: [
         msg.author === "user" && /* @__PURE__ */ jsxDEV("div", { className: "text-xs text-gray-300 mb-1", children: msg.username }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 374,
+          lineNumber: 354,
           columnNumber: 59
         }, this),
         /* @__PURE__ */ jsxDEV("div", { children: msg.text }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 375,
+          lineNumber: 355,
           columnNumber: 33
         }, this),
         msg.audioUrls && msg.audioUrls.length > 0 && /* @__PURE__ */ jsxDEV(
@@ -339,24 +320,24 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
             children: nowPlayingInfo.key === (msg.id || index) && nowPlayingInfo.isPlaying ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
               /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-pause-circle" }, void 0, false, {
                 fileName: "<stdin>",
-                lineNumber: 382,
+                lineNumber: 362,
                 columnNumber: 47
               }, this),
               " Pause"
             ] }, void 0, true, {
               fileName: "<stdin>",
-              lineNumber: 382,
+              lineNumber: 362,
               columnNumber: 45
             }, this) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
               /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-play-circle" }, void 0, false, {
                 fileName: "<stdin>",
-                lineNumber: 384,
+                lineNumber: 364,
                 columnNumber: 47
               }, this),
               " Play"
             ] }, void 0, true, {
               fileName: "<stdin>",
-              lineNumber: 384,
+              lineNumber: 364,
               columnNumber: 45
             }, this)
           },
@@ -364,52 +345,52 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
           false,
           {
             fileName: "<stdin>",
-            lineNumber: 377,
+            lineNumber: 357,
             columnNumber: 37
           },
           this
         )
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 373,
+        lineNumber: 353,
         columnNumber: 29
       }, this) }, msg.id || index, false, {
         fileName: "<stdin>",
-        lineNumber: 372,
+        lineNumber: 352,
         columnNumber: 25
       }, this)),
       isAiThinking && /* @__PURE__ */ jsxDEV("div", { className: "flex justify-start", children: /* @__PURE__ */ jsxDEV("div", { className: "bg-gray-700 p-2 rounded-lg text-sm", children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center space-x-1", children: [
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 395,
+          lineNumber: 375,
           columnNumber: 37
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 396,
+          lineNumber: 376,
           columnNumber: 37
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-300" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 397,
+          lineNumber: 377,
           columnNumber: 37
         }, this)
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 394,
+        lineNumber: 374,
         columnNumber: 33
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 393,
+        lineNumber: 373,
         columnNumber: 29
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 392,
+        lineNumber: 372,
         columnNumber: 25
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 370,
+      lineNumber: 350,
       columnNumber: 17
     }, this),
     /* @__PURE__ */ jsxDEV("form", { onSubmit: handleSendMessage, className: "p-4 border-t border-gray-700 flex gap-2", children: [
@@ -427,7 +408,7 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         false,
         {
           fileName: "<stdin>",
-          lineNumber: 405,
+          lineNumber: 385,
           columnNumber: 21
         },
         this
@@ -440,11 +421,11 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
           disabled: isUserSubmitting || isAiThinking,
           children: isUserSubmitting ? /* @__PURE__ */ jsxDEV("div", { className: "w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 419,
+            lineNumber: 399,
             columnNumber: 29
           }, this) : /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-paper-plane" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 421,
+            lineNumber: 401,
             columnNumber: 29
           }, this)
         },
@@ -452,30 +433,30 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         false,
         {
           fileName: "<stdin>",
-          lineNumber: 413,
+          lineNumber: 393,
           columnNumber: 21
         },
         this
       )
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 404,
+      lineNumber: 384,
       columnNumber: 17
     }, this)
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 362,
+    lineNumber: 342,
     columnNumber: 13
   }, this) }, void 0, false, {
     fileName: "<stdin>",
-    lineNumber: 361,
+    lineNumber: 341,
     columnNumber: 9
   }, this);
 }
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [chatNPC, setChatNPC] = useState(null);
-  const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 10, z: 0 });
+  const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 1.8, z: 0 });
   const [loadedChunks, setLoadedChunks] = useState(/* @__PURE__ */ new Map());
   const [nearbyNPCs, setNearbyNPCs] = useState([]);
   const canvasRef = useRef(null);
@@ -484,7 +465,7 @@ function App() {
   const cameraRef = useRef(null);
   const playerControlsRef = useRef({ forward: false, backward: false, left: false, right: false });
   const cameraRotationRef = useRef({ yaw: 0, pitch: 0 });
-  const velocityRef = useRef({ x: 0, z: 0 });
+  const velocityRef = useRef(new THREE.Vector3());
   const isPointerLockedRef = useRef(false);
   const animationFrameRef = useRef(null);
   const nippleManagerRef = useRef(null);
@@ -515,7 +496,7 @@ function App() {
     scene.background = new THREE.Color(8900331);
     scene.fog = new THREE.Fog(8900331, 100, 1e3);
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1e3);
-    camera.position.set(0, 10, 0);
+    camera.position.set(0, 1.8, 0);
     const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
@@ -550,13 +531,14 @@ function App() {
         size: 120
       });
       nippleManagerRef.current.on("move", (evt, nipple) => {
-        const { angle, distance } = nipple;
-        const force = Math.min(distance / 60, 1);
-        const radians = (angle.radian + Math.PI / 2) % (2 * Math.PI);
-        playerControlsRef.current.forward = Math.cos(radians) * force > 0.3;
-        playerControlsRef.current.backward = Math.cos(radians) * force < -0.3;
-        playerControlsRef.current.left = Math.sin(radians) * force < -0.3;
-        playerControlsRef.current.right = Math.sin(radians) * force > 0.3;
+        const { angle, force } = nipple;
+        const radians = angle.radian;
+        const f = Math.sin(radians);
+        const s = Math.cos(radians);
+        playerControlsRef.current.forward = f > 0.3;
+        playerControlsRef.current.backward = f < -0.3;
+        playerControlsRef.current.right = s > 0.3;
+        playerControlsRef.current.left = s < -0.3;
       });
       nippleManagerRef.current.on("end", () => {
         playerControlsRef.current.forward = false;
@@ -660,7 +642,7 @@ function App() {
       const localZ = vertices[i + 1];
       const worldX = localX + chunkX * CHUNK_SIZE;
       const worldZ = localZ + chunkZ * CHUNK_SIZE;
-      vertices[i + 2] = generateTerrainHeight(worldX, worldZ) + 2;
+      vertices[i + 2] = generateTerrainHeight(worldX, worldZ);
     }
     geometry.attributes.position.needsUpdate = true;
     geometry.computeVertexNormals();
@@ -728,36 +710,22 @@ function App() {
   };
   const updatePlayer = () => {
     if (!cameraRef.current) return;
-    const moveSpeed = 0.3;
-    const acceleration = 0.02;
-    const friction = 0.85;
+    const moveSpeed = 0.2;
     const controls = playerControlsRef.current;
     const camera = cameraRef.current;
     const rotation = cameraRotationRef.current;
-    let inputX = 0;
-    let inputZ = 0;
-    if (controls.forward) inputZ -= 1;
-    if (controls.backward) inputZ += 1;
-    if (controls.left) inputX -= 1;
-    if (controls.right) inputX += 1;
-    if (inputX !== 0 || inputZ !== 0) {
-      const yaw = rotation.yaw;
-      const moveX = (inputX * Math.cos(yaw) - inputZ * Math.sin(yaw)) * acceleration;
-      const moveZ = (inputX * Math.sin(yaw) + inputZ * Math.cos(yaw)) * acceleration;
-      velocityRef.current.x += moveX;
-      velocityRef.current.z += moveZ;
+    const moveDirection = new THREE.Vector3();
+    if (controls.forward) moveDirection.z = -1;
+    if (controls.backward) moveDirection.z = 1;
+    if (controls.left) moveDirection.x = -1;
+    if (controls.right) moveDirection.x = 1;
+    moveDirection.normalize();
+    if (moveDirection.length() > 0) {
+      moveDirection.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotation.yaw);
     }
-    velocityRef.current.x *= friction;
-    velocityRef.current.z *= friction;
-    const maxSpeed = moveSpeed;
-    const speed = Math.sqrt(velocityRef.current.x ** 2 + velocityRef.current.z ** 2);
-    if (speed > maxSpeed) {
-      velocityRef.current.x = velocityRef.current.x / speed * maxSpeed;
-      velocityRef.current.z = velocityRef.current.z / speed * maxSpeed;
-    }
-    const newX = playerPosition.x + velocityRef.current.x;
-    const newZ = playerPosition.z + velocityRef.current.z;
-    const newY = generateTerrainHeight(newX, newZ) + 2;
+    const newX = playerPosition.x + moveDirection.x * moveSpeed;
+    const newZ = playerPosition.z + moveDirection.z * moveSpeed;
+    const newY = generateTerrainHeight(newX, newZ) + 1.8;
     setPlayerPosition({ x: newX, y: newY, z: newZ });
     camera.position.set(newX, newY, newZ);
     camera.rotation.set(rotation.pitch, rotation.yaw, 0, "YXZ");
@@ -770,7 +738,7 @@ function App() {
   return /* @__PURE__ */ jsxDEV(Fragment, { children: [
     /* @__PURE__ */ jsxDEV("canvas", { ref: canvasRef, className: "w-full h-full block" }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 778,
+      lineNumber: 740,
       columnNumber: 13
     }, this),
     chatNPC && currentUser && /* @__PURE__ */ jsxDEV(
@@ -784,20 +752,20 @@ function App() {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 781,
+        lineNumber: 743,
         columnNumber: 17
       },
       this
     )
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 777,
+    lineNumber: 739,
     columnNumber: 9
   }, this);
 }
 const root = createRoot(document.getElementById("root"));
 root.render(/* @__PURE__ */ jsxDEV(App, {}, void 0, false, {
   fileName: "<stdin>",
-  lineNumber: 792,
+  lineNumber: 754,
   columnNumber: 13
 }));
