@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { WebsimSocket, useQuery } from "@websim/use-query";
 import * as THREE from "three";
 import nipplejs from "nipplejs";
+import seedrandom from "seedrandom";
 const room = new WebsimSocket();
 const VOICES = [
   { id: "en-male", name: "English (Male)", flag: "\u{1F1EC}\u{1F1E7}" },
@@ -833,7 +834,7 @@ function App() {
     sceneryObjects.forEach((obj) => sceneRef.current.add(obj));
     let chunkData = await room.collection("npc_locations").filter({ id: chunkHash }).getList();
     if (chunkData.length === 0 && currentUser) {
-      const random = new Math.seedrandom(`${chunkX}_${chunkZ}`);
+      const random = seedrandom(`${chunkX}_${chunkZ}`);
       const npcs = generateNPCsForChunk(chunkX, chunkZ, random);
       if (npcs.length > 0) {
         const randomUsers = await room.query("SELECT id FROM public.chat_histories ORDER BY random() LIMIT 20");
@@ -853,7 +854,7 @@ function App() {
   };
   const generateScenery = (chunkX, chunkZ) => {
     const objects = [];
-    const random = new Math.seedrandom(`scenery_${chunkX}_${chunkZ}`);
+    const random = seedrandom(`scenery_${chunkX}_${chunkZ}`);
     const treeCount = Math.floor(random() * 8) + 5;
     const rockCount = Math.floor(random() * 5);
     for (let i = 0; i < treeCount; i++) {
@@ -967,7 +968,7 @@ function App() {
   return /* @__PURE__ */ jsxDEV(Fragment, { children: [
     /* @__PURE__ */ jsxDEV("canvas", { ref: canvasRef, className: "w-full h-full block", onClick: requestPointerLock }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 1026,
+      lineNumber: 1024,
       columnNumber: 13
     }, this),
     chatNPC && currentUser && /* @__PURE__ */ jsxDEV(
@@ -981,20 +982,20 @@ function App() {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 1029,
+        lineNumber: 1027,
         columnNumber: 17
       },
       this
     )
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 1025,
+    lineNumber: 1023,
     columnNumber: 9
   }, this);
 }
 const root = createRoot(document.getElementById("root"));
 root.render(/* @__PURE__ */ jsxDEV(App, {}, void 0, false, {
   fileName: "<stdin>",
-  lineNumber: 1040,
+  lineNumber: 1038,
   columnNumber: 13
 }));
