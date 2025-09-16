@@ -300,7 +300,7 @@ function ChatUI({ npc, onClose, currentUser }) {
       let availableSnippets = [];
       if (npc.associatedUsers && npc.associatedUsers.length > 0) {
         const userHistoriesData = await room.query(
-          "SELECT messages FROM public.chat_histories WHERE id = ANY($1::text[])",
+          "SELECT messages FROM public.chat_histories WHERE id IN (SELECT unnest($1::text[]))",
           [npc.associatedUsers]
         );
         availableSnippets = userHistoriesData.flatMap((row) => row.messages || []);
