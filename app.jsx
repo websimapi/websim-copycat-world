@@ -17,7 +17,7 @@ const VOICES = [
 ];
 const CHUNK_SIZE = 100;
 const RENDER_DISTANCE = 3;
-const NPC_SPAWN_CHANCE = 0.1;
+const NPC_SPAWN_CHANCE = 0.2;
 const BIOME_COLORS = {
   desert: new THREE.Color(9127187),
   grassland: new THREE.Color(2263842),
@@ -32,6 +32,19 @@ const BIOME_COLORS = {
   rainforest: new THREE.Color(2263842),
   steppe: new THREE.Color(9127187)
 };
+function simpleNoise(x, z, scale = 0.02, octaves = 2, persistence = 0.5, lacunarity = 2) {
+  let total = 0;
+  let frequency = scale;
+  let amplitude = 1;
+  let maxValue = 0;
+  for (let i = 0; i < octaves; i++) {
+    total += Math.sin(x * frequency) * Math.cos(z * frequency) * amplitude;
+    maxValue += amplitude;
+    amplitude *= persistence;
+    frequency *= lacunarity;
+  }
+  return total / maxValue;
+}
 const PERSONAL_CHAT_GREETING = {
   id: "greeting-personal",
   author: "ai",
@@ -52,7 +65,8 @@ function generateChunkHash(x, z) {
   return `${x},${z}`;
 }
 function generateTerrainHeight(x, z) {
-  return 0;
+  const height = simpleNoise(x, z) * 10;
+  return height;
 }
 function generateNPCsForChunk(chunkX, chunkZ, discoveredBy) {
   const npcs = [];
@@ -283,33 +297,33 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         npc.name
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 344,
+        lineNumber: 360,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV("button", { onClick: onClose, className: "p-2 rounded-md hover:bg-gray-700", children: /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-times" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 346,
+        lineNumber: 362,
         columnNumber: 25
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 345,
+        lineNumber: 361,
         columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 343,
+      lineNumber: 359,
       columnNumber: 17
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "flex-1 overflow-y-auto p-4 space-y-3", children: [
       messages.map((msg, index) => /* @__PURE__ */ jsxDEV("div", { className: `flex gap-2 ${msg.isUser ? "justify-end" : "justify-start"}`, children: /* @__PURE__ */ jsxDEV("div", { className: `max-w-[80%] p-2 rounded-lg text-sm ${msg.isUser ? "bg-blue-600" : "bg-gray-700"}`, children: [
         msg.author === "user" && /* @__PURE__ */ jsxDEV("div", { className: "text-xs text-gray-300 mb-1", children: msg.username }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 354,
+          lineNumber: 370,
           columnNumber: 59
         }, this),
         /* @__PURE__ */ jsxDEV("div", { children: msg.text }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 355,
+          lineNumber: 371,
           columnNumber: 33
         }, this),
         msg.audioUrls && msg.audioUrls.length > 0 && /* @__PURE__ */ jsxDEV(
@@ -320,24 +334,24 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
             children: nowPlayingInfo.key === (msg.id || index) && nowPlayingInfo.isPlaying ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
               /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-pause-circle" }, void 0, false, {
                 fileName: "<stdin>",
-                lineNumber: 362,
+                lineNumber: 378,
                 columnNumber: 47
               }, this),
               " Pause"
             ] }, void 0, true, {
               fileName: "<stdin>",
-              lineNumber: 362,
+              lineNumber: 378,
               columnNumber: 45
             }, this) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
               /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-play-circle" }, void 0, false, {
                 fileName: "<stdin>",
-                lineNumber: 364,
+                lineNumber: 380,
                 columnNumber: 47
               }, this),
               " Play"
             ] }, void 0, true, {
               fileName: "<stdin>",
-              lineNumber: 364,
+              lineNumber: 380,
               columnNumber: 45
             }, this)
           },
@@ -345,52 +359,52 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
           false,
           {
             fileName: "<stdin>",
-            lineNumber: 357,
+            lineNumber: 373,
             columnNumber: 37
           },
           this
         )
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 353,
+        lineNumber: 369,
         columnNumber: 29
       }, this) }, msg.id || index, false, {
         fileName: "<stdin>",
-        lineNumber: 352,
+        lineNumber: 368,
         columnNumber: 25
       }, this)),
       isAiThinking && /* @__PURE__ */ jsxDEV("div", { className: "flex justify-start", children: /* @__PURE__ */ jsxDEV("div", { className: "bg-gray-700 p-2 rounded-lg text-sm", children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center space-x-1", children: [
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 375,
+          lineNumber: 391,
           columnNumber: 37
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 376,
+          lineNumber: 392,
           columnNumber: 37
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-300" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 377,
+          lineNumber: 393,
           columnNumber: 37
         }, this)
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 374,
+        lineNumber: 390,
         columnNumber: 33
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 373,
+        lineNumber: 389,
         columnNumber: 29
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 372,
+        lineNumber: 388,
         columnNumber: 25
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 350,
+      lineNumber: 366,
       columnNumber: 17
     }, this),
     /* @__PURE__ */ jsxDEV("form", { onSubmit: handleSendMessage, className: "p-4 border-t border-gray-700 flex gap-2", children: [
@@ -408,7 +422,7 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         false,
         {
           fileName: "<stdin>",
-          lineNumber: 385,
+          lineNumber: 401,
           columnNumber: 21
         },
         this
@@ -421,11 +435,11 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
           disabled: isUserSubmitting || isAiThinking,
           children: isUserSubmitting ? /* @__PURE__ */ jsxDEV("div", { className: "w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 399,
+            lineNumber: 415,
             columnNumber: 29
           }, this) : /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-paper-plane" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 401,
+            lineNumber: 417,
             columnNumber: 29
           }, this)
         },
@@ -433,23 +447,23 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         false,
         {
           fileName: "<stdin>",
-          lineNumber: 393,
+          lineNumber: 409,
           columnNumber: 21
         },
         this
       )
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 384,
+      lineNumber: 400,
       columnNumber: 17
     }, this)
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 342,
+    lineNumber: 358,
     columnNumber: 13
   }, this) }, void 0, false, {
     fileName: "<stdin>",
-    lineNumber: 341,
+    lineNumber: 357,
     columnNumber: 9
   }, this);
 }
@@ -459,6 +473,7 @@ function App() {
   const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 1.8, z: 0 });
   const [loadedChunks, setLoadedChunks] = useState(/* @__PURE__ */ new Map());
   const [nearbyNPCs, setNearbyNPCs] = useState([]);
+  const [interactionTarget, setInteractionTarget] = useState(null);
   const canvasRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
@@ -524,9 +539,9 @@ function App() {
   const setupControls = () => {
     if (isMobileRef.current) {
       nippleManagerRef.current = nipplejs.create({
-        zone: document.getElementById("root"),
+        zone: document.getElementById("joystick-zone"),
         mode: "static",
-        position: { left: "10%", bottom: "20%" },
+        position: { left: "50%", top: "50%" },
         color: "white",
         size: 120
       });
@@ -614,14 +629,8 @@ function App() {
     }
   };
   const handleInteract = () => {
-    const closestNPC = nearbyNPCs.find((npc) => {
-      const distance = Math.sqrt(
-        Math.pow(npc.position.x - playerPosition.x, 2) + Math.pow(npc.position.z - playerPosition.z, 2)
-      );
-      return distance < 5;
-    });
-    if (closestNPC) {
-      setChatNPC(closestNPC);
+    if (interactionTarget) {
+      setChatNPC(interactionTarget);
     }
   };
   const generateInitialTerrain = async () => {
@@ -655,6 +664,8 @@ function App() {
     terrain.position.set(chunkX * CHUNK_SIZE, 0, chunkZ * CHUNK_SIZE);
     terrain.receiveShadow = true;
     sceneRef.current.add(terrain);
+    const sceneryObjects = generateScenery(chunkX, chunkZ);
+    sceneryObjects.forEach((obj) => sceneRef.current.add(obj));
     let chunkData = await room.collection("npc_locations").filter({ id: chunkHash }).getList();
     if (chunkData.length === 0 && currentUser) {
       const npcs = generateNPCsForChunk(chunkX, chunkZ, currentUser.username);
@@ -674,16 +685,74 @@ function App() {
     }
     if (chunkData.length > 0) {
       chunkData[0].npcs.forEach((npc) => {
-        const npcGeometry = new THREE.ConeGeometry(1, 3, 8);
-        const npcMaterial = new THREE.MeshLambertMaterial({ color: 16739179 });
-        const npcMesh = new THREE.Mesh(npcGeometry, npcMaterial);
-        npcMesh.position.set(npc.position.x, npc.position.y, npc.position.z);
-        npcMesh.castShadow = true;
-        npcMesh.userData = { isNPC: true, npcData: npc };
-        sceneRef.current.add(npcMesh);
+        const npcGroup = new THREE.Group();
+        const bodyMaterial = new THREE.MeshLambertMaterial({ color: 16739179 });
+        const bodyHeight = 1.5;
+        const bodyRadius = 0.5;
+        const body = new THREE.Mesh(new THREE.CapsuleGeometry(bodyRadius, bodyHeight, 4, 16), bodyMaterial);
+        body.position.y = bodyHeight / 2 + 0.5;
+        body.castShadow = true;
+        npcGroup.add(body);
+        npcGroup.position.set(npc.position.x, npc.position.y - 1.5, npc.position.z);
+        npcGroup.userData = { isNPC: true, npcData: npc };
+        sceneRef.current.add(npcGroup);
       });
     }
-    chunksMap.set(chunkHash, { terrain, npcs: chunkData[0]?.npcs || [] });
+    chunksMap.set(chunkHash, { terrain, npcs: chunkData[0]?.npcs || [], scenery: sceneryObjects });
+  };
+  const generateScenery = (chunkX, chunkZ) => {
+    const objects = [];
+    const random = new THREE.MathUtils.seedrandom(`scenery_${chunkX}_${chunkZ}`);
+    const treeCount = Math.floor(random() * 8) + 5;
+    const rockCount = Math.floor(random() * 5);
+    for (let i = 0; i < treeCount; i++) {
+      const localX = (random() - 0.5) * CHUNK_SIZE;
+      const localZ = (random() - 0.5) * CHUNK_SIZE;
+      const worldX = chunkX * CHUNK_SIZE + localX;
+      const worldZ = chunkZ * CHUNK_SIZE + localZ;
+      const worldY = generateTerrainHeight(worldX, worldZ);
+      if (worldY < -2) continue;
+      const tree = new THREE.Group();
+      const trunkHeight = random() * 2 + 3;
+      const trunkGeo = new THREE.CylinderGeometry(0.2, 0.3, trunkHeight, 8);
+      const trunkMat = new THREE.MeshLambertMaterial({ color: 6702114 });
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.y = trunkHeight / 2;
+      trunk.castShadow = true;
+      tree.add(trunk);
+      const leavesHeight = random() * 2 + 2;
+      const leavesGeo = new THREE.ConeGeometry(1.5, leavesHeight, 8);
+      const leavesMat = new THREE.MeshLambertMaterial({ color: 3381555 });
+      const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+      leaves.position.y = trunkHeight + leavesHeight / 2 - 0.5;
+      leaves.castShadow = true;
+      tree.add(leaves);
+      tree.position.set(worldX, worldY, worldZ);
+      objects.push(tree);
+    }
+    for (let i = 0; i < rockCount; i++) {
+      const localX = (random() - 0.5) * CHUNK_SIZE;
+      const localZ = (random() - 0.5) * CHUNK_SIZE;
+      const worldX = chunkX * CHUNK_SIZE + localX;
+      const worldZ = chunkZ * CHUNK_SIZE + localZ;
+      const worldY = generateTerrainHeight(worldX, worldZ);
+      const rockSize = random() * 1.5 + 0.5;
+      const rockGeo = new THREE.IcosahedronGeometry(rockSize, 0);
+      const pos = rockGeo.attributes.position;
+      for (let j = 0; j < pos.count; j++) {
+        const v = new THREE.Vector3().fromBufferAttribute(pos, j);
+        v.multiplyScalar(1 + (random() - 0.5) * 0.5);
+        pos.setXYZ(j, v.x, v.y, v.z);
+      }
+      rockGeo.computeVertexNormals();
+      const rockMat = new THREE.MeshLambertMaterial({ color: 8947848 });
+      const rock = new THREE.Mesh(rockGeo, rockMat);
+      rock.position.set(worldX, worldY + rockSize / 2, worldZ);
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      objects.push(rock);
+    }
+    return objects;
   };
   const updateNearbyNPCs = () => {
     const npcs = [];
@@ -697,7 +766,10 @@ function App() {
         }
       });
     });
-    setNearbyNPCs(npcs.sort((a, b) => a.distance - b.distance));
+    const sortedNPCs = npcs.sort((a, b) => a.distance - b.distance);
+    setNearbyNPCs(sortedNPCs);
+    const closest = sortedNPCs.find((npc) => npc.distance < 5);
+    setInteractionTarget(closest || null);
   };
   const startGameLoop = () => {
     const gameLoop = () => {
@@ -738,8 +810,16 @@ function App() {
   return /* @__PURE__ */ jsxDEV(Fragment, { children: [
     /* @__PURE__ */ jsxDEV("canvas", { ref: canvasRef, className: "w-full h-full block" }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 740,
+      lineNumber: 831,
       columnNumber: 13
+    }, this),
+    interactionTarget && !chatNPC && /* @__PURE__ */ jsxDEV("div", { className: "fixed bottom-10 left-1/2 -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg text-center", children: [
+      "Press [E] to talk to ",
+      interactionTarget.name
+    ] }, void 0, true, {
+      fileName: "<stdin>",
+      lineNumber: 834,
+      columnNumber: 17
     }, this),
     chatNPC && currentUser && /* @__PURE__ */ jsxDEV(
       ChatUI,
@@ -752,20 +832,20 @@ function App() {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 743,
+        lineNumber: 840,
         columnNumber: 17
       },
       this
     )
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 739,
+    lineNumber: 830,
     columnNumber: 9
   }, this);
 }
 const root = createRoot(document.getElementById("root"));
 root.render(/* @__PURE__ */ jsxDEV(App, {}, void 0, false, {
   fileName: "<stdin>",
-  lineNumber: 754,
+  lineNumber: 851,
   columnNumber: 13
 }));
