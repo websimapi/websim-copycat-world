@@ -17,6 +17,7 @@ const VOICES = [
 ];
 const CHUNK_SIZE = 100;
 const RENDER_DISTANCE = 3;
+const NPC_SPAWN_CHANCE = 0.1;
 const PERSONAL_CHAT_GREETING = {
   id: "greeting-personal",
   author: "ai",
@@ -44,7 +45,10 @@ function generateTerrainHeight(x, z) {
 function generateNPCsForChunk(chunkX, chunkZ, discoveredBy) {
   const npcs = [];
   const random = new THREE.MathUtils.seedrandom(`${chunkX}_${chunkZ}`);
-  const npcCount = Math.floor(random() * 3) + 1;
+  if (random() > NPC_SPAWN_CHANCE) {
+    return npcs;
+  }
+  const npcCount = Math.floor(random() * 2) + 1;
   for (let i = 0; i < npcCount; i++) {
     const localX = (random() - 0.5) * CHUNK_SIZE * 0.8;
     const localZ = (random() - 0.5) * CHUNK_SIZE * 0.8;
@@ -267,33 +271,33 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         npc.name
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 324,
+        lineNumber: 330,
         columnNumber: 21
       }, this),
       /* @__PURE__ */ jsxDEV("button", { onClick: onClose, className: "p-2 rounded-md hover:bg-gray-700", children: /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-times" }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 326,
+        lineNumber: 332,
         columnNumber: 25
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 325,
+        lineNumber: 331,
         columnNumber: 21
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 323,
+      lineNumber: 329,
       columnNumber: 17
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "flex-1 overflow-y-auto p-4 space-y-3", children: [
       messages.map((msg, index) => /* @__PURE__ */ jsxDEV("div", { className: `flex gap-2 ${msg.isUser ? "justify-end" : "justify-start"}`, children: /* @__PURE__ */ jsxDEV("div", { className: `max-w-[80%] p-2 rounded-lg text-sm ${msg.isUser ? "bg-blue-600" : "bg-gray-700"}`, children: [
         msg.author === "user" && /* @__PURE__ */ jsxDEV("div", { className: "text-xs text-gray-300 mb-1", children: msg.username }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 334,
+          lineNumber: 340,
           columnNumber: 59
         }, this),
         /* @__PURE__ */ jsxDEV("div", { children: msg.text }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 335,
+          lineNumber: 341,
           columnNumber: 33
         }, this),
         msg.audioUrls && msg.audioUrls.length > 0 && /* @__PURE__ */ jsxDEV(
@@ -304,24 +308,24 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
             children: nowPlayingInfo.key === (msg.id || index) && nowPlayingInfo.isPlaying ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
               /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-pause-circle" }, void 0, false, {
                 fileName: "<stdin>",
-                lineNumber: 342,
+                lineNumber: 348,
                 columnNumber: 47
               }, this),
               " Pause"
             ] }, void 0, true, {
               fileName: "<stdin>",
-              lineNumber: 342,
+              lineNumber: 348,
               columnNumber: 45
             }, this) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
               /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-play-circle" }, void 0, false, {
                 fileName: "<stdin>",
-                lineNumber: 344,
+                lineNumber: 350,
                 columnNumber: 47
               }, this),
               " Play"
             ] }, void 0, true, {
               fileName: "<stdin>",
-              lineNumber: 344,
+              lineNumber: 350,
               columnNumber: 45
             }, this)
           },
@@ -329,52 +333,52 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
           false,
           {
             fileName: "<stdin>",
-            lineNumber: 337,
+            lineNumber: 343,
             columnNumber: 37
           },
           this
         )
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 333,
+        lineNumber: 339,
         columnNumber: 29
       }, this) }, msg.id || index, false, {
         fileName: "<stdin>",
-        lineNumber: 332,
+        lineNumber: 338,
         columnNumber: 25
       }, this)),
       isAiThinking && /* @__PURE__ */ jsxDEV("div", { className: "flex justify-start", children: /* @__PURE__ */ jsxDEV("div", { className: "bg-gray-700 p-2 rounded-lg text-sm", children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center space-x-1", children: [
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 355,
+          lineNumber: 361,
           columnNumber: 37
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 356,
+          lineNumber: 362,
           columnNumber: 37
         }, this),
         /* @__PURE__ */ jsxDEV("div", { className: "w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-300" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 357,
+          lineNumber: 363,
           columnNumber: 37
         }, this)
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 354,
+        lineNumber: 360,
         columnNumber: 33
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 353,
+        lineNumber: 359,
         columnNumber: 29
       }, this) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 352,
+        lineNumber: 358,
         columnNumber: 25
       }, this)
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 330,
+      lineNumber: 336,
       columnNumber: 17
     }, this),
     /* @__PURE__ */ jsxDEV("form", { onSubmit: handleSendMessage, className: "p-4 border-t border-gray-700 flex gap-2", children: [
@@ -392,7 +396,7 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         false,
         {
           fileName: "<stdin>",
-          lineNumber: 365,
+          lineNumber: 371,
           columnNumber: 21
         },
         this
@@ -405,11 +409,11 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
           disabled: isUserSubmitting || isAiThinking,
           children: isUserSubmitting ? /* @__PURE__ */ jsxDEV("div", { className: "w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 379,
+            lineNumber: 385,
             columnNumber: 29
           }, this) : /* @__PURE__ */ jsxDEV("i", { className: "fa-solid fa-paper-plane" }, void 0, false, {
             fileName: "<stdin>",
-            lineNumber: 381,
+            lineNumber: 387,
             columnNumber: 29
           }, this)
         },
@@ -417,23 +421,23 @@ ${shuffledSnippets.map((s, i) => `${i}: "${sanitizeForAI(s.text)}"`).join("\n")}
         false,
         {
           fileName: "<stdin>",
-          lineNumber: 373,
+          lineNumber: 379,
           columnNumber: 21
         },
         this
       )
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 364,
+      lineNumber: 370,
       columnNumber: 17
     }, this)
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 322,
+    lineNumber: 328,
     columnNumber: 13
   }, this) }, void 0, false, {
     fileName: "<stdin>",
-    lineNumber: 321,
+    lineNumber: 327,
     columnNumber: 9
   }, this);
 }
@@ -448,7 +452,8 @@ function App() {
   const rendererRef = useRef(null);
   const cameraRef = useRef(null);
   const playerControlsRef = useRef({ forward: false, backward: false, left: false, right: false });
-  const mouseMovementRef = useRef({ x: 0, y: 0 });
+  const cameraRotationRef = useRef({ yaw: 0, pitch: 0 });
+  const velocityRef = useRef({ x: 0, z: 0 });
   const isPointerLockedRef = useRef(false);
   const animationFrameRef = useRef(null);
   const nippleManagerRef = useRef(null);
@@ -589,8 +594,10 @@ function App() {
   };
   const handleMouseMove = (event) => {
     if (isPointerLockedRef.current) {
-      mouseMovementRef.current.x += event.movementX * 2e-3;
-      mouseMovementRef.current.y = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, mouseMovementRef.current.y - event.movementY * 2e-3));
+      const sensitivity = 2e-3;
+      cameraRotationRef.current.yaw -= event.movementX * sensitivity;
+      cameraRotationRef.current.pitch -= event.movementY * sensitivity;
+      cameraRotationRef.current.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraRotationRef.current.pitch));
     }
   };
   const handleInteract = () => {
@@ -615,16 +622,21 @@ function App() {
   };
   const generateChunk = async (chunkX, chunkZ, chunksMap) => {
     const chunkHash = generateChunkHash(chunkX, chunkZ);
-    const geometry = new THREE.PlaneGeometry(CHUNK_SIZE, CHUNK_SIZE, 32, 32);
+    const geometry = new THREE.PlaneGeometry(CHUNK_SIZE, CHUNK_SIZE, 64, 64);
     const vertices = geometry.attributes.position.array;
     for (let i = 0; i < vertices.length; i += 3) {
-      const x = vertices[i] + chunkX * CHUNK_SIZE;
-      const z = vertices[i + 1] + chunkZ * CHUNK_SIZE;
-      vertices[i + 2] = generateTerrainHeight(x, z);
+      const localX = vertices[i];
+      const localZ = vertices[i + 1];
+      const worldX = localX + chunkX * CHUNK_SIZE;
+      const worldZ = localZ + chunkZ * CHUNK_SIZE;
+      vertices[i + 2] = generateTerrainHeight(worldX, worldZ);
     }
     geometry.attributes.position.needsUpdate = true;
     geometry.computeVertexNormals();
-    const material = new THREE.MeshLambertMaterial({ color: 4881497 });
+    const material = new THREE.MeshLambertMaterial({
+      color: 4881497,
+      wireframe: false
+    });
     const terrain = new THREE.Mesh(geometry, material);
     terrain.rotation.x = -Math.PI / 2;
     terrain.position.set(chunkX * CHUNK_SIZE, 0, chunkZ * CHUNK_SIZE);
@@ -633,11 +645,13 @@ function App() {
     let chunkData = await room.collection("npc_locations").filter({ id: chunkHash }).getList();
     if (chunkData.length === 0 && currentUser) {
       const npcs = generateNPCsForChunk(chunkX, chunkZ, currentUser.username);
-      const randomUsers = await room.query("SELECT id FROM public.chat_histories ORDER BY random() LIMIT 20");
-      const userIds = randomUsers.map((u) => u.id);
-      npcs.forEach((npc) => {
-        npc.associatedUsers = userIds.slice(0, Math.floor(Math.random() * 5) + 3);
-      });
+      if (npcs.length > 0) {
+        const randomUsers = await room.query("SELECT id FROM public.chat_histories ORDER BY random() LIMIT 20");
+        const userIds = randomUsers.map((u) => u.id);
+        npcs.forEach((npc) => {
+          npc.associatedUsers = userIds.slice(0, Math.floor(Math.random() * 5) + 3);
+        });
+      }
       await room.collection("npc_locations").create({
         id: chunkHash,
         npcs,
@@ -683,28 +697,39 @@ function App() {
   };
   const updatePlayer = () => {
     if (!cameraRef.current) return;
-    const moveSpeed = 0.5;
+    const moveSpeed = 0.3;
+    const acceleration = 0.02;
+    const friction = 0.85;
     const controls = playerControlsRef.current;
-    let moveX = 0;
-    let moveZ = 0;
-    if (controls.forward) moveZ -= moveSpeed;
-    if (controls.backward) moveZ += moveSpeed;
-    if (controls.left) moveX -= moveSpeed;
-    if (controls.right) moveX += moveSpeed;
-    if (moveX !== 0 || moveZ !== 0) {
-      const camera = cameraRef.current;
-      const yaw = mouseMovementRef.current.x;
-      const newX = playerPosition.x + (moveX * Math.cos(yaw) - moveZ * Math.sin(yaw));
-      const newZ = playerPosition.z + (moveX * Math.sin(yaw) + moveZ * Math.cos(yaw));
-      const newY = generateTerrainHeight(newX, newZ) + 2;
-      setPlayerPosition({ x: newX, y: newY, z: newZ });
-      camera.position.set(newX, newY, newZ);
+    const camera = cameraRef.current;
+    const rotation = cameraRotationRef.current;
+    let inputX = 0;
+    let inputZ = 0;
+    if (controls.forward) inputZ -= 1;
+    if (controls.backward) inputZ += 1;
+    if (controls.left) inputX -= 1;
+    if (controls.right) inputX += 1;
+    if (inputX !== 0 || inputZ !== 0) {
+      const yaw = rotation.yaw;
+      const moveX = (inputX * Math.cos(yaw) - inputZ * Math.sin(yaw)) * acceleration;
+      const moveZ = (inputX * Math.sin(yaw) + inputZ * Math.cos(yaw)) * acceleration;
+      velocityRef.current.x += moveX;
+      velocityRef.current.z += moveZ;
     }
-    cameraRef.current.rotation.set(
-      mouseMovementRef.current.y,
-      mouseMovementRef.current.x,
-      0
-    );
+    velocityRef.current.x *= friction;
+    velocityRef.current.z *= friction;
+    const maxSpeed = moveSpeed;
+    const speed = Math.sqrt(velocityRef.current.x ** 2 + velocityRef.current.z ** 2);
+    if (speed > maxSpeed) {
+      velocityRef.current.x = velocityRef.current.x / speed * maxSpeed;
+      velocityRef.current.z = velocityRef.current.z / speed * maxSpeed;
+    }
+    const newX = playerPosition.x + velocityRef.current.x;
+    const newZ = playerPosition.z + velocityRef.current.z;
+    const newY = generateTerrainHeight(newX, newZ) + 2;
+    setPlayerPosition({ x: newX, y: newY, z: newZ });
+    camera.position.set(newX, newY, newZ);
+    camera.rotation.set(rotation.pitch, rotation.yaw, 0, "YXZ");
   };
   const render = () => {
     if (rendererRef.current && sceneRef.current && cameraRef.current) {
@@ -714,7 +739,7 @@ function App() {
   return /* @__PURE__ */ jsxDEV(Fragment, { children: [
     /* @__PURE__ */ jsxDEV("canvas", { ref: canvasRef, className: "w-full h-full block" }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 707,
+      lineNumber: 744,
       columnNumber: 13
     }, this),
     chatNPC && currentUser && /* @__PURE__ */ jsxDEV(
@@ -728,20 +753,20 @@ function App() {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 710,
+        lineNumber: 747,
         columnNumber: 17
       },
       this
     )
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 706,
+    lineNumber: 743,
     columnNumber: 9
   }, this);
 }
 const root = createRoot(document.getElementById("root"));
 root.render(/* @__PURE__ */ jsxDEV(App, {}, void 0, false, {
   fileName: "<stdin>",
-  lineNumber: 721,
+  lineNumber: 758,
   columnNumber: 13
 }));
