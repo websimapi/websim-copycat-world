@@ -485,6 +485,7 @@ function App() {
   const [loadedChunks, setLoadedChunks] = useState(/* @__PURE__ */ new Map());
   const [nearbyNPCs, setNearbyNPCs] = useState([]);
   const [interactionTarget, setInteractionTarget] = useState(null);
+  const [worldReady, setWorldReady] = useState(false);
   const canvasRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
@@ -504,8 +505,6 @@ function App() {
       setCurrentUser(user);
       initializeThreeJS();
       setupControls();
-      generateInitialTerrain();
-      startGameLoop();
       document.getElementById("root").style.opacity = "1";
     };
     initialize();
@@ -518,6 +517,16 @@ function App() {
       }
     };
   }, []);
+  useEffect(() => {
+    if (currentUser && !worldReady) {
+      const initWorld = async () => {
+        await generateInitialTerrain();
+        startGameLoop();
+        setWorldReady(true);
+      };
+      initWorld();
+    }
+  }, [currentUser, worldReady]);
   const initializeThreeJS = () => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(8900331);
@@ -827,7 +836,7 @@ function App() {
   return /* @__PURE__ */ jsxDEV(Fragment, { children: [
     /* @__PURE__ */ jsxDEV("canvas", { ref: canvasRef, className: "w-full h-full block" }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 852,
+      lineNumber: 862,
       columnNumber: 13
     }, this),
     interactionTarget && !chatNPC && /* @__PURE__ */ jsxDEV("div", { className: "fixed bottom-10 left-1/2 -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg text-center", children: [
@@ -835,7 +844,7 @@ function App() {
       interactionTarget.name
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 855,
+      lineNumber: 865,
       columnNumber: 17
     }, this),
     chatNPC && currentUser && /* @__PURE__ */ jsxDEV(
@@ -849,20 +858,20 @@ function App() {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 861,
+        lineNumber: 871,
         columnNumber: 17
       },
       this
     )
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 851,
+    lineNumber: 861,
     columnNumber: 9
   }, this);
 }
 const root = createRoot(document.getElementById("root"));
 root.render(/* @__PURE__ */ jsxDEV(App, {}, void 0, false, {
   fileName: "<stdin>",
-  lineNumber: 872,
+  lineNumber: 882,
   columnNumber: 13
 }));
